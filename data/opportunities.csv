@@ -1,0 +1,12 @@
+opportunity_id,opportunity_name,account_id,owner_user_id,stage,amount,close_date,created_date
+O-001,Acme Platform Expansion,A-001,U-001,Proposal,100000,2026-11-15,2026-07-01
+O-002,Borealis Support Renewal,A-002,U-001,Negotiation,75000,2026-10-30,2026-06-15
+O-003,Cyan Net-New Platform,A-003,U-002,Discovery,75000,2026-12-20,2026-08-01
+O-004,Delta Widget Rollout,A-001,U-002,Closed Won,150000,2026-05-20,2026-01-10
+O-005,Everest Training Bundle,A-004,U-003,Closed Won,120000,2026-06-12,2026-02-01
+O-006,Fjord Gadget Fleet,A-005,U-004,Closed Won,80000,2026-01-16,2025-10-20
+O-007,Granite Support Plan,A-006,U-002,Closed Won,50000,2026-07-08,2026-03-05
+O-008,Helios Platform Bid,A-002,U-003,Closed Lost,200000,2026-06-30,2026-02-10
+O-009,Ionic Gizmo Pilot,A-004,U-004,Closed Lost,175000,2026-05-05,2026-01-15
+O-010,Juniper Retail Refresh,A-005,U-003,Closed Lost,125000,2026-07-22,2026-03-01
+O-011,Acme Services Add-on,A-001,U-001,Closed Lost,100000,2026-03-14,2025-12-01

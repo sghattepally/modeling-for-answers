@@ -1,0 +1,379 @@
+# Sales Pipeline & Bookings — semantic model specification
+#
+# This is the model the series builds, written as a readable specification rather than a
+# product export. It is the blueprint: objects, grains, relationships, cardinality,
+# descriptions, synonyms, governed metrics and business preferences.
+#
+# Deliberately NOT a claim about Tableau Next's on-disk metadata format. The Tableau Next
+# REST API accepts JSON payloads for calculated fields and metrics; those payloads, in the
+# shape the API actually takes, are in calculated-fields-and-metrics.md alongside this file.
+# Use this YAML to review and agree the model with humans; use that file to create it.
+#
+# Every figure referenced here is asserted by ../data/verify_numbers.py.
+
+model:
+  name: Sales_Pipeline_And_Bookings
+  label: Sales Pipeline & Bookings
+  description: >
+    Open pipeline and historical bookings for a single sales organization, modeled as two
+    facts sharing conformed Account, Product and Date dimensions. Built to support
+    side-by-side pipeline-versus-actuals reporting and whitespace analysis.
+  source_data: ../data/
+  default_currency: USD
+
+# ---------------------------------------------------------------------------------------
+# Business preferences — the conventions everyone "just knows" and nobody writes down.
+# An agent with no stated default guesses; an agent with one is right by construction.
+# ---------------------------------------------------------------------------------------
+business_preferences:
+  fiscal_year_start_month: 2          # February. This is the whole Part 7 YTD trap.
+  fiscal_year_naming: ending_year     # Feb 2026 - Jan 2027 is called FY2027.
+  this_year_means: fiscal_year_to_date
+  default_currency: USD
+  default_date_field:
+    bookings: Order.Order_Date
+    revenue: Opportunity.Close_Date
+    pipeline_generation: Opportunity.Created_Date
+  house_default_metrics:
+    win_rate: Win_Rate_by_Value_clc   # Not by count. Written down so it stops being an argument.
+  notes: >
+    Fiscal calendars vary by business unit in many organizations. Keep the fiscal attributes
+    in the Date dimension as data so they can be parameterized, rather than hardcoding one
+    calendar into metric definitions.
+
+# ---------------------------------------------------------------------------------------
+# Facts. Grain is stated first because it is the most clarifying sentence about any table.
+# ---------------------------------------------------------------------------------------
+facts:
+
+  - name: Opportunity
+    grain: one row per opportunity
+    row_count: 11
+    description: >
+      Sales pipeline. One row per opportunity, at any stage. Represents intended or
+      in-progress business, NOT recognized revenue — for actuals use Order.
+    synonyms: [deals, opps, opportunities, pipeline]
+    primary_key: opportunity_id
+    measures:
+      - name: Amount
+        additivity: additive
+        description: >
+          Total opportunity value in company currency, at the opportunity grain. Do not sum
+          across Opportunity Line Item — that multiplies it by the line count (Part 3).
+      - name: Opportunity_Count
+        additivity: additive
+        aggregation: Count
+        description: Distinct count of opportunities. The denominator for count-based rates.
+    dimensions_used: [Account, User, Product, Date]
+    stage_values:
+      open: [Discovery, Proposal, Negotiation]
+      won: [Closed Won]
+      lost: [Closed Lost]
+
+  - name: Order
+    grain: one row per confirmed customer order
+    row_count: 9
+    description: >
+      Historical actuals. One row per confirmed order. This is what "bookings" means in this
+      model — Opportunity is pipeline, Order is what actually sold. Never use the two
+      interchangeably.
+    synonyms: [bookings, actuals, orders, sales]
+    primary_key: order_id
+    measures:
+      - name: Amount
+        additivity: additive
+        description: Order value in company currency, at the order grain.
+    dimensions_used: [Account, Product, Date]
+
+# ---------------------------------------------------------------------------------------
+# Junction / bridge objects. These carry attributes of the RELATIONSHIP, which is what
+# makes correct attribution possible.
+# ---------------------------------------------------------------------------------------
+bridges:
+
+  - name: Opportunity_Line_Item
+    grain: one row per product per opportunity
+    row_count: 16
+    description: >
+      Bridge between Opportunity and Product, resolving a genuine many-to-many. Carries the
+      line's own amount and the allocation factor used to split deal value across products.
+    bridges_between: [Opportunity, Product]
+    measures:
+      - name: Line_Amount
+        additivity: additive
+        description: >
+          This line's own value. Sums to the parent Opportunity.Amount. Use this — not the
+          header Amount — for any product-level revenue question.
+      - name: Allocation_Factor
+        additivity: non-additive
+        description: >
+          Line_Amount / parent Opportunity.Amount. Factors for one opportunity sum to 1.00,
+          which is the property that makes "revenue by product" reconcile to total revenue.
+          Do not substitute an equal split or all-or-nothing attribution (Part 4).
+
+  - name: Order_Line
+    grain: one row per product per order
+    row_count: 11
+    description: Bridge between Order and Product. Carries the line's own amount.
+    bridges_between: [Order, Product]
+    measures:
+      - name: Line_Amount
+        additivity: additive
+        description: This line's own value. Sums to the parent Order.Amount.
+
+# ---------------------------------------------------------------------------------------
+# Conformed dimensions — defined once, used identically by both facts. Conformance is
+# something you build and test, not something you get by drawing two lines to one box.
+# ---------------------------------------------------------------------------------------
+dimensions:
+
+  - name: Account
+    grain: one row per account
+    row_count: 10
+    description: The customer or prospect. Conformed across Opportunity and Order.
+    synonyms: [customer, client, company, logo]
+    primary_key: account_id
+    attributes: [account_name, region, industry, segment]
+    slowly_changing: type_2
+    scd_note: >
+      Region and segment are Type 2 because territory moves and reclassifications are
+      themselves reportable events — "how did the West do last year" must mean the West as
+      it was. Account name corrections are Type 1.
+    unknown_member: A-000 "Unknown Account"
+    unknown_member_note: >
+      Orphan fact rows route here rather than being dropped, so a broken key shows up as a
+      visible number instead of missing revenue (Part 2).
+
+  - name: User
+    grain: one row per user
+    row_count: 4
+    description: The opportunity owner.
+    synonyms: [rep, reps, AE, AEs, seller, sellers, owner, salesperson]
+    primary_key: user_id
+    attributes: [user_name, role, region]
+    slowly_changing: type_2
+    scd_note: Owner and territory changes are reportable history, so versioned.
+
+  - name: Product
+    grain: one row per product
+    row_count: 6
+    description: >
+      What is being sold. Conformed across both facts, reached through a bridge on each
+      side, which is what makes product-level whitespace analysis possible.
+    synonyms: [SKU, item, offering]
+    primary_key: product_id
+    attributes: [product_name, product_family, list_price]
+    slowly_changing: type_1
+
+  - name: Date
+    grain: one row per day
+    row_count: 488
+    description: >
+      Materialized calendar covering Oct 2025 - Jan 2027, with both calendar and fiscal
+      attributes. A real table, not a formatting concern — this is what makes "this year"
+      a modeling decision rather than a guess.
+    primary_key: date
+    attributes:
+      - calendar_year
+      - calendar_quarter
+      - month_number
+      - month_name
+      - year_month
+      - fiscal_year
+      - fiscal_quarter
+      - fiscal_period
+      - is_calendar_ytd
+      - is_fiscal_ytd
+    role_playing: true
+    roles:
+      - role: Close Date
+        on: Opportunity.close_date
+        means: when the deal books. Default for revenue and bookings questions.
+      - role: Created Date
+        on: Opportunity.created_date
+        means: when it entered the pipeline. Default for pipeline-generation questions.
+      - role: Order Date
+        on: Order.order_date
+        means: when the order was placed. Default for bookings questions.
+    role_playing_note: >
+      One table, three relationships. Never surface an unqualified field called "Date" —
+      "this quarter" is ambiguous until the role is named (Part 2).
+
+# ---------------------------------------------------------------------------------------
+# Relationships. Cardinality is declared on purpose: it is how the engine knows how to
+# aggregate safely, and wrong cardinality produces confident wrong totals.
+# ---------------------------------------------------------------------------------------
+relationships:
+
+  - from: Opportunity
+    to: Account
+    on: account_id
+    cardinality: many_to_one
+    filter_direction: single      # Account -> Opportunity. Safe: can only remove rows.
+
+  - from: Opportunity
+    to: User
+    on: owner_user_id
+    cardinality: many_to_one
+    filter_direction: single
+
+  - from: Opportunity
+    to: Date
+    on: close_date
+    role: Close Date
+    cardinality: many_to_one
+    filter_direction: single
+
+  - from: Opportunity
+    to: Date
+    on: created_date
+    role: Created Date
+    cardinality: many_to_one
+    filter_direction: single
+
+  - from: Opportunity_Line_Item
+    to: Opportunity
+    on: opportunity_id
+    cardinality: many_to_one
+    filter_direction: single
+    warning: >
+      Traversing this from Opportunity downward is one-to-many and multiplies
+      Opportunity.Amount by the line count. This is the fan-out in Part 3.
+
+  - from: Opportunity_Line_Item
+    to: Product
+    on: product_id
+    cardinality: many_to_one
+    filter_direction: single
+
+  - from: Order
+    to: Account
+    on: account_id
+    cardinality: many_to_one
+    filter_direction: single
+
+  - from: Order
+    to: Date
+    on: order_date
+    role: Order Date
+    cardinality: many_to_one
+    filter_direction: single
+
+  - from: Order_Line
+    to: Order
+    on: order_id
+    cardinality: many_to_one
+    filter_direction: single
+
+  - from: Order_Line
+    to: Product
+    on: product_id
+    cardinality: many_to_one
+    filter_direction: single
+
+# ---------------------------------------------------------------------------------------
+# Multi-fact query policy. This is the part most explanations omit, and it is the part
+# that decides whether whitespace analysis is possible at all.
+# ---------------------------------------------------------------------------------------
+multi_fact_policy:
+  facts: [Opportunity, Order]
+  shared_dimensions: [Account, Product, Date]
+  pattern: drill_across
+  steps:
+    - Aggregate each fact independently, at its own grain.
+    - Align the two summaries on the conformed dimension key.
+  join_type: FULL OUTER JOIN
+  join_type_rationale: >
+    An inner join returns only accounts present in both facts — the customers you already
+    know about. The rows with a gap on one side are the whitespace: Cyan Systems has
+    $75,000 of pipeline and no order history; Granite Bank has $55,000 of orders and no
+    opportunities. An inner join deletes exactly the rows worth acting on.
+  null_handling: >
+    After the full outer join, measures are NULL rather than zero. Coalesce deliberately
+    before arithmetic; a null coverage ratio is not a zero one.
+  forbidden: >
+    Never query both facts through a shared dimension without aggregating first. Doing so
+    pairs every order with every opportunity for an account, inflating bookings 2.08x and
+    opportunity value 1.72x — different factors, so no single correction fixes the table.
+
+# ---------------------------------------------------------------------------------------
+# Governed metrics. The agent's vocabulary of answers. Where a metric has two legitimate
+# definitions, both are published with distinct names and one is declared the default.
+# ---------------------------------------------------------------------------------------
+metrics:
+
+  - api_name: Open_Pipeline_clc
+    label: Open Pipeline
+    expression_shape: SUM(Amount) WHERE stage is open
+    aggregation_type: UserAgg
+    additivity: additive
+    expected_value: 250000
+    description: >
+      Total value of opportunities not yet closed. Excludes Closed Won and Closed Lost.
+
+  - api_name: Bookings_clc
+    label: Bookings
+    expression_shape: SUM(Order.Amount)
+    aggregation_type: Sum
+    additivity: additive
+    expected_value: 600000
+    description: >
+      Actual order value. Comes from Order, never from Opportunity. "Bookings" in this
+      model always means orders placed.
+
+  - api_name: Win_Rate_by_Value_clc
+    label: Win Rate by Value
+    expression_shape: SUM(won amount) / SUM(closed amount)
+    aggregation_type: UserAgg
+    additivity: non_additive
+    denominator: closed opportunities only
+    expected_value: 0.40
+    house_default: true
+    description: >
+      Won amount divided by closed amount. Excludes open opportunities, so it measures
+      competitive performance on decided deals. HOUSE DEFAULT — an unqualified request for
+      "win rate" resolves to this. Never sum or average this field; recompute it.
+
+  - api_name: Win_Rate_by_Count_clc
+    label: Win Rate by Count
+    expression_shape: COUNT(won opps) / COUNT(closed opps)
+    aggregation_type: UserAgg
+    additivity: non_additive
+    denominator: closed opportunities only
+    expected_value: 0.50
+    house_default: false
+    description: >
+      Count of won opportunities divided by count of closed opportunities. Weights every
+      deal equally regardless of size, so it diverges from Win Rate by Value when deal
+      sizes vary. Use when the question is about deal throughput, not revenue.
+
+  - api_name: Bookings_Fiscal_YTD_clc
+    label: Bookings Fiscal YTD
+    expression_shape: SUM(Order.Amount) WHERE is_fiscal_ytd
+    aggregation_type: UserAgg
+    expected_value: 480000
+    house_default: true
+    description: >
+      Bookings from the start of the fiscal year (1 February) to today. HOUSE DEFAULT for
+      "this year".
+
+  - api_name: Bookings_Calendar_YTD_clc
+    label: Bookings Calendar YTD
+    expression_shape: SUM(Order.Amount) WHERE is_calendar_ytd
+    aggregation_type: UserAgg
+    expected_value: 600000
+    house_default: false
+    description: >
+      Bookings from 1 January to today. A named first-class sibling, not a workaround —
+      the board thinks in calendar years and must be able to ask.
+
+  - api_name: Revenue_by_Product_clc
+    label: Revenue by Product
+    expression_shape: SUM(Order_Line.Line_Amount)
+    aggregation_type: Sum
+    additivity: additive
+    expected_value: 600000
+    description: >
+      Product-level revenue from order lines. Uses the line amount, never the order header
+      amount. Must reconcile to total bookings; if it exceeds it, all-or-nothing
+      attribution has been used where an allocation factor was needed.

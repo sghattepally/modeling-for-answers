@@ -1,0 +1,18 @@
+
+# Claude Code project-local settings (tn autonomy grants)
+.claude/settings.local.json
+
+# Editor and tooling state
+.cursor/
+.sf/
+.DS_Store
+**/.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Publishing pipeline for the Google Doc edition, and its output. These exist to
+# push this content into one specific document and are of no use to a reader.
+tools/
+build/

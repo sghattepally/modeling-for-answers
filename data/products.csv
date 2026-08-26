@@ -1,0 +1,7 @@
+product_id,product_name,product_family,list_price
+P-001,Widget,Hardware,1000
+P-002,Gadget,Hardware,2500
+P-003,Gizmo,Hardware,5000
+P-004,Platform License,Software,20000
+P-005,Support Plan,Services,5000
+P-006,Training Credits,Services,500

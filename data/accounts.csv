@@ -1,0 +1,11 @@
+account_id,account_name,region,industry,segment
+A-001,Acme Corp,West,Manufacturing,Enterprise
+A-002,Borealis Ltd,West,Technology,Enterprise
+A-003,Cyan Systems,East,Technology,Mid-Market
+A-004,Delta Foods,East,Retail,Enterprise
+A-005,Everest Health,Central,Healthcare,Enterprise
+A-006,Fjord Logistics,West,Logistics,Mid-Market
+A-007,Granite Bank,East,Financial Services,Enterprise
+A-008,Helios Energy,Central,Energy,Enterprise
+A-009,Ionic Labs,West,Life Sciences,Mid-Market
+A-010,Juniper Retail,Central,Retail,Mid-Market
