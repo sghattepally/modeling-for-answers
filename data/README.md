@@ -10,8 +10,11 @@ Back to [series overview](../README.md)
 ## Run it
 
 ```bash
-python3 build_dataset.py    # regenerates all eight CSVs
-python3 verify_numbers.py   # asserts every figure the articles quote
+git clone https://github.com/sghattepally/modeling-for-answers.git
+cd modeling-for-answers
+
+python3 data/build_dataset.py    # regenerates all eight CSVs
+python3 data/verify_numbers.py   # asserts every figure the articles quote
 ```
 
 No dependencies beyond the Python standard library. `verify_numbers.py` exits non-zero if any

@@ -8,6 +8,14 @@ numbers are correct, and your AI agent can be trusted.*
 > Product specifics verified against Tableau Next, API v66.0.
 > Every figure in the series is derived from [`data/`](data/) — run `python3 data/verify_numbers.py`.
 
+Everything here is public and reproducible: **https://github.com/sghattepally/modeling-for-answers**
+
+```bash
+git clone https://github.com/sghattepally/modeling-for-answers.git
+cd modeling-for-answers
+python3 data/verify_numbers.py
+```
+
 ---
 
 ## Why this series
