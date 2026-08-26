@@ -365,33 +365,48 @@ def part2_no_op():
 
 
 def part2_role_playing():
-    W, H = 820, 500
-    b = [heading(W, "Role-playing dimensions: one Date table, three meanings",
+    W, H = 900, 610
+    b = [heading(W, "Role-playing dimensions: one calendar, three aliases",
                  "\u201cThis quarter\u201d is ambiguous until you say which date you mean")]
-    roles = [(40, 100, "Created Date", "when it entered pipeline", "Opportunity"),
-             (320, 100, "Close Date", "when it books", "Opportunity"),
-             (600, 100, "Order Date", "when it shipped", "Order")]
-    for rx, ry, role, meaning, owner in roles:
-        b.append(node(rx, ry, 180, 82, role, meaning, f"on {owner}",
-                      where=f"p2 role {role}"))
-        b.append(line(rx + 90, ry + 82, 410, 244, LINE, 2, arrow=True))
-    b.append(node(320, 244, 180, 74, "Date", "one conformed table",
+
+    # Facts on top, each relating down to role aliases rather than to one shared Date.
+    b.append(node(238, 100, 200, 72, "Opportunity", "FACT",
                   fill=NAVY, stroke=NAVY, title_fill=WHITE, sub_fill=NAVY_TEXT,
-                  where="p2 date"))
-    b.append(rect(150, 352, 520, 84, fill=AMBER_BG, stroke=AMBER, sw=1.5))
-    b.append(txt(410, 378, "Three relationships to the same table, not three tables.",
+                  where="p2rp opp"))
+    b.append(node(575, 100, 200, 72, "Order", "FACT",
+                  fill=NAVY, stroke=NAVY, title_fill=WHITE, sub_fill=NAVY_TEXT,
+                  where="p2rp order"))
+
+    aliases = [(135, "Date (Created)", "pipeline entered", 338, "CreatedDate"),
+               (360, "Date (Closed)", "revenue booked", 338, "CloseDate"),
+               (585, "Date (Order)", "order shipped", 675, "OrderDate")]
+    for ax, title, sub, fact_cx, key in aliases:
+        acx = ax + 90
+        b.append(line(fact_cx, 172, acx, 250, LINE, 2, arrow=True))
+        b.append(node(ax, 250, 180, 78, title, sub, where=f"p2rp {title}"))
+        # Each alias hangs off the one physical calendar underneath it.
+        b.append(line(acx, 328, 450, 400, LINE, 1.5, dash="5,4"))
+        b.append(pill((fact_cx + acx) / 2, 211, key, where=f"p2rp key {key}"))
+
+    b.append(node(320, 400, 260, 72, "Date", "one physical calendar DMO",
+                  fill=SLATE_BG, stroke=LINE, dash="5,4", where="p2rp physical"))
+    b.append(pill(450, 364, "same DMO", fill=FAINT, where="p2rp same"))
+
+    b.append(rect(80, 500, 740, 68, fill=AMBER_BG, stroke=AMBER, sw=1.5))
+    b.append(txt(450, 524, "One physical calendar. Three role aliases. One relationship each.",
                  13, 600, AMBER))
-    b.append(txt(410, 400, "Each one is a separate role, and a question must pick one.",
+    b.append(txt(450, 546, "Two relationships to a single Date object would be a cycle \u2014 "
+                           "so it isn't allowed.",
                  13, 400, MUTED))
-    b.append(txt(410, 420, "Pipeline reports by Created Date; bookings by Close Date.",
-                 13, 400, MUTED))
-    b.append(footnote(W, 476, "Leave the role implicit and two dashboards will quietly "
+    b.append(footnote(W, 590, "Leave the role implicit and two dashboards will quietly "
                               "choose differently."))
     svg("part-2-03-role-playing-dimension.svg", W, H,
         "Role-playing dimensions",
-        "A single conformed Date table related three times - as Created Date and Close "
-        "Date on Opportunity, and as Order Date on Order. Each relationship is a distinct "
-        "role, so a question must state which date it means.",
+        "One physical Date calendar sits beneath three role aliases - Date (Created), "
+        "Date (Closed) and Date (Order). Opportunity relates once to the Created alias and "
+        "once to the Closed alias; Order relates once to the Order alias. Every alias "
+        "points back at the same underlying calendar, so the definitions stay conformed "
+        "while each relationship stays unambiguous.",
         "".join(b))
 
 

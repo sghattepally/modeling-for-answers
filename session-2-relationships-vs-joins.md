@@ -168,31 +168,62 @@ kind of wrong.
 
 ---
 
-## Sidebar: the same dimension, related three times
+## Sidebar: the same dimension, playing three roles
 
 Our star has one Date dimension. But an opportunity has a **created date** and a **close
 date**, and an order has an **order date**. All three are dates. Do you build three date
 tables?
 
-No. You build one and relate to it three times. Each relationship is a **role**, and this
-pattern is a **role-playing dimension**.
+No — and you also don't draw three relationships into one Date object. Those are both wrong,
+in opposite directions. What you build is **one physical calendar, exposed as three
+role-named aliases**, each with exactly one relationship. That pattern is a **role-playing
+dimension**.
 
-![One conformed Date table related three times, as Created Date and Close Date on Opportunity and as Order Date on Order](diagrams/part-2-03-role-playing-dimension.svg)
+![One physical calendar beneath three role aliases, each with a single relationship: Opportunity to Date (Created) and Date (Closed), Order to Date (Order)](diagrams/part-2-03-role-playing-dimension.svg)
 
-The reason this matters is that it makes "this quarter" a question rather than a fact.
-Pipeline generated this quarter means *created* this quarter. Bookings this quarter means
-*closed* this quarter. Those are different sets of opportunities, and both are legitimate
-readings of "this quarter's pipeline."
+Three separate date tables would drift — three loads, three definitions of "fiscal quarter",
+and exactly the fragmentation a conformed calendar exists to prevent. But relating a single
+Date object to Opportunity twice is worse than it looks. It creates two paths between the
+same pair of objects, and once there are two paths, "opportunities in Q3" has two readings
+and the engine silently picks one. Tableau Next won't let you build it: relationships that
+reference the same object more than once are treated as circular and dropped. No modeling
+practice should want it either. This isn't a product gap — it's the same reason Kimball's
+original prescription for role-playing dimensions was *aliased views* over one physical
+table rather than repeated joins.
 
-Two consequences worth internalizing:
+An alias is a first-class thing here, not a workaround. The same underlying data object can
+be added to a model more than once, each instance carrying its own name while pointing at
+one shared source. So the model holds `Date (Created)`, `Date (Closed)` and `Date (Order)` —
+three objects to the query planner, one calendar to whoever maintains it. Conformance
+survives because there is still exactly one place where "fiscal quarter" is defined.
 
-- **Name the role, not the table.** In the model, the relationships should read as
-  `Opportunity.Close Date → Date` and `Opportunity.Created Date → Date`, and the fields
-  users see should say "Close Date" and "Created Date" — never a single ambiguous "Date."
+This generalizes well past dates, and it's worth knowing before you need it. `Account
+(Broker)` and `Account (Customer)` on one model is the same move: a single Account source,
+two roles that mean genuinely different things to the business.
+
+The reason all of this matters is that it makes "this quarter" a question rather than a
+fact. Pipeline generated this quarter means *created* this quarter. Bookings this quarter
+means *closed* this quarter. Those are different sets of opportunities, and both are
+legitimate readings of "this quarter's pipeline."
+
+Three consequences worth internalizing:
+
+- **Name the role, not the table.** A picker that offers "Date" twice gets chosen from at
+  random — by people, and by agents. Usefully, the alias approach *forces* the discipline: the
+  objects need distinct names in order to exist at all, so it's structural rather than a
+  convention someone has to remember.
 - **Pick the default deliberately.** Pipeline and forecast metrics usually key off created
-  date; revenue and bookings metrics off close date. Write the choice into the metric
-  definition so it travels with the number (Part 5), rather than leaving each analyst to
-  rediscover it.
+  date; revenue and bookings metrics off close date.
+- **Write that default into the metric, not the dashboard.** A metric definition names the
+  time field it's measured against and the grains it supports. That's where a role belongs —
+  bound to the governed number so it travels with it (Part 5), rather than left for each
+  analyst to rediscover.
+
+That last point deserves emphasis, because it saves you modeling work: you don't need a
+relationship to a calendar merely to group by month. The fact already carries its own date
+columns, and a metric can key off them directly. Reach for a role alias when you need the
+calendar's *attributes* — fiscal quarter, holiday flags, period-to-date markers — in more
+than one role.
 
 Leave the role implicit and two dashboards will quietly choose differently — which is the
 Part 6 argument in miniature.
@@ -293,7 +324,9 @@ a reason to walk through the door.
    for bidirectional filtering last, on one relationship, for a written-down reason.
 5. **One fact never narrows another.** Only a shared dimension connects them, and making
    them agree is drill-across (Part 4).
-6. **Name the role, not the table.** Close Date and Created Date are different questions.
+6. **Name the role, not the table.** Close Date and Created Date are different questions, so
+   give each one its own alias over the single shared calendar — never two relationships into
+   one Date object.
 7. **Give every dimension an Unknown member** and route orphans to it, so a broken key
    becomes a number you can see rather than revenue you can't.
 

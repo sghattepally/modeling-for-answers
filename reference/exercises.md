@@ -291,9 +291,10 @@ outcome.
 The lesson is that a role-playing dimension makes the date role a **required** part of the question,
 not an optional detail. Leave it implicit and two dashboards will quietly choose differently, which is
 the [two dashboards disagree](symptom-triage.md#two-dashboards-disagree-on-the-same-metric) symptom
-arriving by a different route. Name the relationships for the role, not the table — "Created Date" and
-"Close Date", not "Date" twice — so a person picking fields cannot pick blindly. `Order` adds a third
-role, `order_date`, to the same calendar.
+arriving by a different route. Give each role its own alias over the one shared calendar — `Date
+(Created)` and `Date (Closed)`, not "Date" twice — so a person picking fields cannot pick blindly, and
+so the model keeps a single unambiguous path to each. `Order` adds a third role, `order_date`, to the
+same calendar.
 
 </details>
 

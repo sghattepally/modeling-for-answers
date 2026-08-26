@@ -205,16 +205,29 @@ business unit, is not. That is the difference between standardizing and overfitt
 
 ### Role-playing
 
-One physical calendar, related more than once. In the series model the calendar plays three roles:
+One physical calendar, aliased once per role. In the series model the calendar plays three roles:
 `created_date` and `close_date` on `Opportunity`, `order_date` on `Order`.
 
-Two rules make this work:
+Three rules make this work:
 
 - **Do not build three calendar tables.** They will drift, and three tables mean three definitions of
   "fiscal quarter" — the exact problem materializing a calendar was supposed to solve.
-- **Name the relationship for the role, not the table.** "Created Date" and "Close Date", never "Date"
+- **Do not relate one calendar object twice to the same fact either.** Two relationships between the
+  same pair of objects is two paths, and two paths make the traversal ambiguous. A semantic model has
+  to stay acyclic, so the second relationship is dropped rather than honored. Instead, add the same
+  underlying calendar to the model once per role, each instance under its own name — `Date (Created)`,
+  `Date (Closed)`, `Date (Order)`. One source, three objects, one relationship each. This is what
+  Kimball meant by aliased views, expressed as model metadata instead of SQL.
+- **Name the alias for the role, not the table.** "Created Date" and "Close Date", never "Date"
   twice. A person choosing fields from a picker that offers `Date` twice is choosing at random, and so
-  is an agent.
+  is an agent. Aliasing gets you this for free, since distinct names are what make the instances
+  distinct in the first place.
+
+Worth knowing where the cheaper option sits. Grouping by calendar month or quarter needs no
+relationship at all — the fact carries its own date columns, and a metric definition names the time
+field it is measured against plus the grains it supports, which is where the role is best recorded
+anyway. Spend an alias when you need the calendar's *attributes* in more than one role: fiscal
+periods, holiday flags, period-to-date markers.
 
 The stakes are not subtle. In the dataset, two opportunities worth $180,000 were created in 2025 and
 *none* closed in 2025 — so "how much did we do last year" is either $180,000 or nothing, depending

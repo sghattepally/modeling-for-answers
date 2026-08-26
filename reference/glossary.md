@@ -436,12 +436,13 @@ puts a door between them.*
 
 ### Role-playing dimension
 
-One conformed dimension related more than once to the same model, where each relationship means
-something different. Each role is a separate path, and a question has to pick one.
+One physical dimension that appears in a model once per role, each instance under its own name and
+each with exactly one relationship. Not the same as relating a single object twice — that would be two
+paths between the same pair, which is a cycle and is disallowed.
 
-*[Part 2](../session-2-relationships-vs-joins.md). The single calendar plays three roles here:
-created date and close date on `Opportunity`, order date on `Order`. Two opportunities were created in
-2025 and none closed in 2025 — "last year" is a different answer per role.*
+*[Part 2](../session-2-relationships-vs-joins.md). The single calendar plays three roles here, as
+`Date (Created)` and `Date (Closed)` on `Opportunity` and `Date (Order)` on `Order`. Two opportunities
+were created in 2025 and none closed in 2025 — "last year" is a different answer per role.*
 
 ### Row-level calculation
 
