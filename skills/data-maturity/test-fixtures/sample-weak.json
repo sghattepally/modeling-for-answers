@@ -1,0 +1,46 @@
+{
+  "apiName": "Legacy_Sales_Model",
+  "label": "Legacy Sales Model",
+  "dataspace": "default",
+  "semanticDataObjects": [
+    {
+      "apiName": "Opp_TAB",
+      "label": "Opp",
+      "description": "",
+      "semanticDimensions": [
+        {"apiName": "Stg", "label": "Stg", "dataType": "Text", "description": "Stg"},
+        {"apiName": "Own", "label": "Own", "dataType": "Text", "description": null}
+      ],
+      "semanticMeasurements": [
+        {"apiName": "Amount", "label": "Amount", "dataType": "Number", "aggregationType": "Sum", "description": "Amount"},
+        {"apiName": "Total_Amount", "label": "Total Amount", "dataType": "Number", "aggregationType": "Sum", "description": null}
+      ]
+    },
+    {
+      "apiName": "Order_TAB",
+      "label": "Order",
+      "description": null,
+      "semanticDimensions": [],
+      "semanticMeasurements": [
+        {"apiName": "Amt", "label": "Amt", "dataType": "Number", "aggregationType": "Sum", "description": null}
+      ]
+    }
+  ],
+  "calculatedMeasurements": [
+    {
+      "apiName": "Win_Rate_clc",
+      "label": "Win Rate",
+      "expression": "SUM([Amount]) / COUNT([Stg])",
+      "aggregationType": "UserAgg",
+      "dataType": "Number",
+      "description": null
+    }
+  ],
+  "calculatedDimensions": [],
+  "semanticMetrics": [],
+  "relationships": [
+    {"fromObject": "Opp_TAB", "toObject": "Order_TAB", "cardinality": null},
+    {"fromObject": "Order_TAB", "toObject": "Opp_TAB", "cardinality": null}
+  ],
+  "businessPreferences": {}
+}

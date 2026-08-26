@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<datasource caption='Sales Extract' inline='true' version='18.1'>
+  <connection class='hyper'>
+    <relation name='Opportunity' table='[Opportunity]' type='table' />
+  </connection>
+  <column name='[Stage]' caption='Stage' datatype='string' role='dimension' type='nominal' />
+  <column name='[Owner]' caption='Owner' datatype='string' role='dimension' type='nominal' />
+  <column name='[Close Date]' caption='Close Date' datatype='date' role='dimension' type='ordinal' />
+  <column name='[Amount]' caption='Amount' datatype='real' role='measure' type='quantitative' default-aggregation='Sum' />
+  <column name='[Calc_WinRate]' caption='Win Rate' datatype='real' role='measure' type='quantitative' default-aggregation='Sum'>
+    <calculation class='tableau' formula='SUM(IF [Stage] = &quot;Closed Won&quot; THEN [Amount] ELSE 0 END) / SUM([Amount])' />
+  </column>
+</datasource>

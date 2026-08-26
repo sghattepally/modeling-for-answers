@@ -1,0 +1,129 @@
+{
+  "apiName": "Sales_Pipeline_and_Bookings",
+  "label": "Sales Pipeline & Bookings",
+  "dataspace": "default",
+  "semanticDataObjects": [
+    {
+      "apiName": "Opportunity_TAB",
+      "label": "Opportunities",
+      "description": "One row per opportunity; represents pipeline, not actual bookings.",
+      "semanticDimensions": [
+        {
+          "apiName": "Stage",
+          "label": "Stage",
+          "dataType": "Text",
+          "description": "Sales stage; Discovery/Proposal/Negotiation are open, Closed Won/Closed Lost are closed.",
+          "synonyms": ["status", "sales stage"]
+        },
+        {
+          "apiName": "Owner",
+          "label": "Owner",
+          "dataType": "Text",
+          "description": "The account executive who owns this opportunity.",
+          "synonyms": ["rep", "AE", "seller"]
+        },
+        {
+          "apiName": "Close_Date",
+          "label": "Close Date",
+          "dataType": "Date",
+          "description": "Date the opportunity closed or is expected to close. Default date for bookings.",
+          "synonyms": []
+        },
+        {
+          "apiName": "Created_Date",
+          "label": "Created Date",
+          "dataType": "Date",
+          "description": "Date the opportunity entered the pipeline. Default date for pipeline generation.",
+          "synonyms": []
+        }
+      ],
+      "semanticMeasurements": [
+        {
+          "apiName": "Amount",
+          "label": "Amount",
+          "dataType": "Number",
+          "aggregationType": "Sum",
+          "description": "Total opportunity value in company currency; for annualized value see ACV.",
+          "synonyms": ["deal size", "pipeline value"]
+        }
+      ]
+    },
+    {
+      "apiName": "Order_TAB",
+      "label": "Orders",
+      "description": "One row per confirmed customer order; represents actual bookings, not pipeline.",
+      "semanticDimensions": [
+        {
+          "apiName": "Account_Name",
+          "label": "Account",
+          "dataType": "Text",
+          "description": "The customer account that placed the order.",
+          "synonyms": ["customer", "client"]
+        }
+      ],
+      "semanticMeasurements": [
+        {
+          "apiName": "Order_Amount",
+          "label": "Order Amount",
+          "dataType": "Number",
+          "aggregationType": "Sum",
+          "description": "Total confirmed booking value for this order in company currency.",
+          "synonyms": ["bookings", "revenue"]
+        }
+      ]
+    }
+  ],
+  "calculatedMeasurements": [
+    {
+      "apiName": "Win_Rate_by_Value_clc",
+      "label": "Win Rate by Value",
+      "expression": "SUM(IF [Stage] = 'Closed Won' THEN [Amount] ELSE 0 END) / SUM(IF [Stage] IN ('Closed Won','Closed Lost') THEN [Amount] ELSE 0 END)",
+      "aggregationType": "UserAgg",
+      "dataType": "Number",
+      "description": "Win rate weighted by deal value, over closed opportunities only. The house default for 'win rate.'"
+    },
+    {
+      "apiName": "Win_Rate_by_Count_clc",
+      "label": "Win Rate by Count",
+      "expression": "COUNT(IF [Stage] = 'Closed Won' THEN 1 END) / COUNT(IF [Stage] IN ('Closed Won','Closed Lost') THEN 1 END)",
+      "aggregationType": "UserAgg",
+      "dataType": "Number",
+      "description": "Win rate by deal count, over closed opportunities only. Named alternative to the value-weighted default."
+    }
+  ],
+  "calculatedDimensions": [],
+  "semanticMetrics": [
+    {
+      "apiName": "Win_Rate_by_Value_mtc",
+      "label": "Win Rate by Value",
+      "measurementReference": {"calculatedFieldApiName": "Win_Rate_by_Value_clc"},
+      "timeDimensionReference": {"tableFieldReference": {"fieldApiName": "Close_Date", "tableApiName": "Opportunity_TAB"}},
+      "timeGrains": ["Month", "Quarter", "Year"],
+      "description": "Governed win-rate metric, by value, closed opportunities only."
+    },
+    {
+      "apiName": "Win_Rate_by_Count_mtc",
+      "label": "Win Rate by Count",
+      "measurementReference": {"calculatedFieldApiName": "Win_Rate_by_Count_clc"},
+      "timeDimensionReference": {"tableFieldReference": {"fieldApiName": "Close_Date", "tableApiName": "Opportunity_TAB"}},
+      "timeGrains": ["Month", "Quarter", "Year"],
+      "description": "Governed win-rate metric, by count, closed opportunities only."
+    },
+    {
+      "apiName": "Bookings_mtc",
+      "label": "Bookings",
+      "measurementReference": {"calculatedFieldApiName": "Order_Amount"},
+      "timeDimensionReference": {"tableFieldReference": {"fieldApiName": "Close_Date", "tableApiName": "Order_TAB"}},
+      "timeGrains": ["Month", "Quarter", "Year"],
+      "description": "Confirmed bookings, fiscal-year aware."
+    }
+  ],
+  "relationships": [
+    {"fromObject": "Opportunity_TAB", "toObject": "Order_TAB", "cardinality": "many-to-many"}
+  ],
+  "businessPreferences": {
+    "currency": "USD",
+    "fiscalYearStart": "February",
+    "defaultDateField": "Close_Date"
+  }
+}
