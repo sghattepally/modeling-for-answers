@@ -198,30 +198,32 @@ questions whose answers you already know** and checking whether it gets them rig
 **evaluation set** — a golden question set — and it's the single highest-value artifact you can
 build after the model itself.
 
-The format is unglamorous on purpose:
+The format is unglamorous on purpose. Ten of this model's twenty questions, keeping the numbering
+they carry in the eval set itself:
 
-| # | Question as a user would type it | Expected answer | Tests |
+| Eval # | Question as a user would type it | Expected answer | Tests |
 |---|---|---|---|
 | 1 | What's my open pipeline? | $250,000 | Correct fact, correct stage filter |
-| 2 | Total bookings this year | $480,000 (fiscal default) | Fiscal-vs-calendar default |
-| 3 | What's our win rate? | 40.0% (house default, by value, closed only) | Governed metric resolution |
-| 4 | How many deals did we win? | 4 | Count vs. value basis |
-| 5 | Pipeline for Acme | $100,000 | Synonym → account, open-only |
+| 3 | Show me pipeline by rep | 2 owners ($175,000 / $75,000) | "rep" → User synonym |
+| 4 | Pipeline for Acme | $100,000 | Synonym → account, open-only |
+| 5 | What's the amount for the Acme Platform Expansion deal? | $100,000, not $300,000 | Fan-out protection |
 | 6 | Revenue by product | totals to $600,000, never more | Allocation factor on the bridge |
-| 7 | Which accounts bought but have nothing open? | 4 accounts, $300,000 | Full outer join preserved |
-| 8 | Show me pipeline by rep | 2 owners ($175,000 / $75,000) | "rep" → User synonym |
-| 9 | Bookings for Granite Bank | $55,000 | Account present in only one fact |
-| 10 | Amount for the Acme platform deal | $100,000, not $300,000 | Fan-out protection |
+| 9 | What's our win rate? | 40.0% (house default, by value, closed only) | Governed metric resolution |
+| 11 | How many deals did we win? | 4 | Count vs. value basis |
+| 13 | How are we doing this year? | $480,000 (fiscal YTD, the house default) | Fiscal-vs-calendar default |
+| 16 | Bookings for Granite Bank | $55,000 | Account present in only one fact |
+| 18 | How's Helios Energy doing? | No opportunities and no orders — said plainly | Absence reported, not rendered as zero |
 
-The full set for this model, with the exact expected values and the failure each question is
-designed to catch, is in
-[`Semantic Models/agent-eval-set.md`](Semantic%20Models/agent-eval-set.md).
+The numbers in that first column are the point: they are the eval set's own identifiers, so
+"question 13 regressed" means the same thing in a standup, a commit message and the file. All
+twenty, with the exact expected values and the specific failure each one is designed to catch,
+are in [`Semantic Models/agent-eval-set.md`](Semantic%20Models/agent-eval-set.md).
 
 Four principles that make an eval set actually useful:
 
 1. **Score the number, not the prose.** A confidently-worded wrong answer is a failure. Assert
    the value.
-2. **Include the questions you know are ambiguous.** Question 2 exists precisely because "this
+2. **Include the questions you know are ambiguous.** Question 13 exists precisely because "this
    year" has two answers. You're testing that the agent applies your *stated default*, not that
    it reads your mind.
 3. **Write a question for every trap in this series.** Fan-out, chasm trap, allocation,
@@ -268,8 +270,9 @@ between an answer you can act on and one you have to go verify.
 1. **Strip the metadata.** Same correct model, empty descriptions, no synonyms, no governed
    metrics, no stated fiscal default. Ask "how are we doing this year?" and "what's our win
    rate?" Get plausible, unattributed numbers.
-2. **Run the eval set against it.** Watch it fail on questions 2, 3, 4, 6 and 8. Not vaguely —
-   specifically, with a wrong number next to a right one.
+2. **Run the eval set against it.** Watch it fail on questions 3, 6, 9, 11 and 13 — the five that
+   depend on a synonym, an allocation factor, a governed metric, a count basis and a stated fiscal
+   default. Not vaguely, but specifically, with a wrong number next to a right one.
 3. **Add metadata layer by layer.** Descriptions, then synonyms, then governed metrics, then the
    fiscal default. Re-run the eval set after each layer and watch the pass rate climb. This is
    the most persuasive demo in the entire series, because it's a number going up.
