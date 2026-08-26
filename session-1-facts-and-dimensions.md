@@ -229,8 +229,9 @@ it we place the dimensions that describe each opportunity: **Account** (who), **
 owner), **Product** (what), and **Date** (when). On the SDM canvas, that's a textbook star:
 Opportunities in the middle, four dimensions radiating out.
 
-The model definition is in [`Semantic Models/`](Semantic%20Models/) if you want to read the
-objects, relationships and field descriptions as data rather than prose.
+The objects, relationships and field descriptions are described as we go; the questions that prove
+the model behaves correctly are collected in
+[`Semantic Models/agent-eval-set.md`](Semantic%20Models/agent-eval-set.md).
 
 Notice what we did **not** do: we didn't cram everything into one table. That discipline
 pays off in Parts 3 and 4, when we add a second fact — **Orders**, your historical actuals —

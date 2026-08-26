@@ -195,10 +195,8 @@ to January 2027 is called FY2026 by some organizations and FY2027 by others, dep
 label follows the start or the end. The dataset labels by the year the fiscal year ends in, so February
 2026 through January 2027 is FY2027 and January 2026 belongs to the previous fiscal year. Neither
 convention is more correct. Both are catastrophic when two systems disagree silently, so write the
-convention into the model and not into a wiki — which is why it appears as
-`fiscal_year_naming: ending_year` in
-[the model specification](../Semantic%20Models/sales-pipeline-model.yaml), sitting beside the
-fiscal start month rather than living in someone's memory.
+convention into the model and not into a wiki — record it as a stated business preference, sitting
+beside the fiscal start month rather than living in someone's memory.
 
 **A fiscal calendar is data, not a constant.** Organizations acquire other organizations, and the
 acquired unit's fiscal year does not change to be convenient. A fiscal year hardcoded into a metric

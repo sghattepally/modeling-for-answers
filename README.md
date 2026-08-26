@@ -124,7 +124,7 @@ These stand outside the narrative and are meant to be used, not read front to ba
 |---|---|
 | [`data/`](data/) | The dataset, its builder, and the script that verifies every figure. |
 | [`diagrams/`](diagrams/) | All 18 diagrams and the generator that produces them, with text-fit assertions so labels cannot overflow. |
-| [`Semantic Models/`](Semantic%20Models/) | The model specification, the governed metrics in the form the API takes, and the agent eval set. |
+| [`Semantic Models/`](Semantic%20Models/) | The agent eval set — twenty questions with known answers. The model specification and metric definitions follow once exported from Tableau Next. |
 
 ---
 
