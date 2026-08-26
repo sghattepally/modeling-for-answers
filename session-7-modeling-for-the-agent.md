@@ -36,7 +36,7 @@ commentary on the model; it's the part of the model the agent actually reads.
 
 Four layers, in the order they pay off — and all of them resting on something non-optional.
 
-![Five layers resting on a correct model: descriptions, synonyms, governed metrics, business preferences](diagrams/part-7-01-agent-metadata-stack.svg)
+![Five stacked layers with a correct model at the base, then field and object descriptions, synonyms, governed metrics, and business preferences](diagrams/part-7-01-agent-metadata-stack.svg)
 
 ### 1. Descriptions on objects and fields
 
